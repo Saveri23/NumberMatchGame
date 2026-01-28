@@ -1,13 +1,28 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface CellProps {
-  value: number;
+  value: number | null;
   onPress: () => void;
   isSelected: boolean;
 }
 
 export default function Cell({ value, onPress, isSelected }: CellProps) {
+  if (value === null) {
+    return (
+      <View
+        style={{
+          width: 35,
+          height: 35,
+          margin: 2,
+          backgroundColor: '#ddd',
+          borderWidth: 1,
+          borderColor: '#999',
+        }}
+      />
+    );
+  }
+
   return (
     <TouchableOpacity
       onPress={onPress}
