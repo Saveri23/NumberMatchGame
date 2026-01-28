@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView } from 'react-native';
-import { generateBoard, addRow, Board as BoardType } from '../utils/boardLogic';
+import { generateBoard, addRow, Board as BoardType, hasAnyMatch } from '../utils/boardLogic';
 import Cell from './Cell';
 
 interface BoardProps {
@@ -16,19 +16,53 @@ interface SelectedCell {
 export default function Board({ level, addClicks }: BoardProps) {
   const [board, setBoard] = useState<BoardType>(generateBoard(level));
   const [selected, setSelected] = useState<SelectedCell[]>([]);
+  const [highlightedMatches, setHighlightedMatches] = useState<SelectedCell[]>([]);
 
   // regenerate board when level changes
   useEffect(() => {
     setBoard(generateBoard(level));
     setSelected([]);
+    highlightMatches(generateBoard(level));
   }, [level]);
 
   // add rows when addClicks change
   useEffect(() => {
     if (addClicks > 0) {
-      setBoard(prev => addRow(prev, level, addClicks));
+      const newBoard = addRow(board, level, addClicks);
+      setBoard(newBoard);
+      highlightMatches(newBoard);
     }
   }, [addClicks]);
+
+  // Highlight possible matches
+  const highlightMatches = (currentBoard: BoardType) => {
+    const matches: SelectedCell[] = [];
+    const rows = currentBoard.length;
+    const cols = currentBoard[0].length;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = currentBoard[r][c];
+        if (v === null) continue;
+
+        const neighbors: [number, number][] = [
+          [r, (c + 1) % cols], // right
+          [(r + 1) % rows, c], // down
+          [(r + 1) % rows, (c + 1) % cols], // diagonal
+        ];
+
+        for (const [nr, nc] of neighbors) {
+          const n = currentBoard[nr][nc];
+          if (n !== null && (n === v || n + v === 10)) {
+            matches.push({ row: r, col: c });
+            matches.push({ row: nr, col: nc });
+          }
+        }
+      }
+    }
+
+    setHighlightedMatches(matches);
+  };
 
   const handleCellPress = (row: number, col: number) => {
     if (selected.length === 0) {
@@ -46,6 +80,7 @@ export default function Board({ level, addClicks }: BoardProps) {
         newBoard[first.row][first.col] = null;
         newBoard[row][col] = null;
         setBoard(newBoard);
+        highlightMatches(newBoard); // update highlighted matches
       }
     }
 
@@ -67,6 +102,7 @@ export default function Board({ level, addClicks }: BoardProps) {
               value={cell}
               isSelected={selected.some(s => s.row === rIdx && s.col === cIdx)}
               onPress={() => handleCellPress(rIdx, cIdx)}
+              highlight={highlightedMatches.some(s => s.row === rIdx && s.col === cIdx)}
             />
           ))}
         </View>

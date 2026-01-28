@@ -5,9 +5,10 @@ interface CellProps {
   value: number | null;
   onPress: () => void;
   isSelected: boolean;
+  highlight?: boolean;
 }
 
-export default function Cell({ value, onPress, isSelected }: CellProps) {
+export default function Cell({ value, onPress, isSelected, highlight }: CellProps) {
   if (value === null) {
     return (
       <View
@@ -30,7 +31,7 @@ export default function Cell({ value, onPress, isSelected }: CellProps) {
         width: 35,
         height: 35,
         margin: 2,
-        backgroundColor: isSelected ? '#4caf50' : '#f0f0f0',
+        backgroundColor: isSelected ? '#4caf50' : highlight ? '#ffeb3b' : '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
